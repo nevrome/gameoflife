@@ -1,8 +1,12 @@
 import "lib/github.com/athas/matte/colour"
 
-let main (t: f32) (width: i64) (height: i64) (alive:[][]i64): [height][width]argb.colour =
+let replicate 't (n: i64) (x: t): [n]t =
+  map (\_ -> x) (0..<n)
+
+let main (t: f32) (width: i64) (height: i64): [height][width]argb.colour =
+  let world: [][]bool = replicate width (replicate height true)
   let f j i =
-    let is_alive = reduce (||) false (map (\x -> i == x[0] && j == x[1]) alive)
+    let is_alive = world[i,j] && (i64.f32 t %% 2 == 0)
     in if is_alive then argb.green else argb.blue
   in tabulate_2d height width f
 
@@ -16,9 +20,11 @@ module lys: lys with text_content = i32 = {
   let text_content fps _ = t32 fps
   let grab_mouse = false
 
-  type~ state = {t:f32, h:i64, w:i64, alive:[][]i64}
+  type~ state = {t:f32, h:i64, w:i64}
 
-  let init _ h w: state = {t=0, h, w, alive=[[100,100], [101,101], [100,101], [101,100]]}
+  -- let world_start = replicate 2000i64 (replicate 2000i64 true)
+
+  let init _ h w: state = {t=0, h, w}
 
   let event (e: event) (s: state) =
     match e
@@ -27,6 +33,7 @@ module lys: lys with text_content = i32 = {
 
   let resize h w (s: state) = s with h = h with w = w
 
-  let render (s: state) = main s.t s.w s.h s.alive
+  let render (s: state) = main s.t s.w s.h
 }
 
+-- idea: store whole grid in state -> world is true

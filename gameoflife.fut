@@ -29,7 +29,9 @@ module lys: lys with text_content = i32 = {
     match e
     case #step td -> 
       s with t = s.t + td
-        with world = replicate s.w (replicate s.h  (i64.f32 s.t %% 2 == 0))
+        with world = if s.t < 5
+                     then replicate s.w (replicate s.h true)
+                     else replicate s.w (replicate s.h false)
     case _ -> s
 
   let resize h w (s: state) = s with h = h with w = w

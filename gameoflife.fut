@@ -13,7 +13,7 @@ let conwayslogic (world: [][]bool): [][]bool =
   world
 
 let starting_world_generator (w: i64) (h: i64): [][]bool =
-  replicate w (replicate h false)
+  replicate w (replicate h false) with [10,10] = true with [9,10] = true with [10,9] = true
 
 import "lib/github.com/diku-dk/lys/lys"
 
@@ -31,7 +31,7 @@ module lys: lys with text_content = i32 = {
 
   let event (e: event) (s: state) =
     match e
-    case #step td -> 
+    case #step td ->
       s with t = s.t + td
         with world = conwayslogic s.world
     case _ -> s

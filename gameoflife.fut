@@ -22,13 +22,8 @@ let starting_world_generator (h: i64) (w: i64): [][]bool =
 
 import "lib/github.com/diku-dk/lys/lys"
 
-module lys: lys with text_content = i32 = {
-
-  type text_content = i32
-  let text_format () = "FPS: %d"
-  let text_colour _ = argb.black
-  let text_content fps _ = t32 fps
-  let grab_mouse = false
+type text_content = (i32, i32)
+module lys: lys with text_content = text_content = {
 
   type~ state = {t:f32, h:i64, w:i64, world:[][]bool}
 
@@ -44,6 +39,13 @@ module lys: lys with text_content = i32 = {
   let resize h w (s: state) = s with h = h with w = w
 
   let render (s: state) = plot s.t s.w s.h s.world
+  
+  type text_content = text_content
+  let text_format () = "FPS: %d\nt: %d"
+  let text_colour = const argb.black
+  let text_content (fps: f32) (s: state): text_content = (t32 fps, t32 s.t)
+  let grab_mouse = false
+  
 }
 
 -- idea: store whole grid in state -> world is true

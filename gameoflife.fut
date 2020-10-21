@@ -31,11 +31,11 @@ let conwayslogic (width: i64) (height: i64) (world: [][]bool): [][]bool =
   let number_of_true_diagonal = map4 (\a1 b1 c1 d1 -> map4 (\a2 b2 c2 d2 -> (bti a2 + bti b2 + bti c2 + bti d2)) a1 b1 c1 d1) shift_top_left shift_top_right shift_bottom_left shift_bottom_right
   let number_true_total = map2 (\a1 b1 -> map2 (\a2 b2 -> (a2 + b2)) a1 b1) number_of_true_normal number_of_true_diagonal
   -- conway
-  let new_world = map (\a1 -> map (\a2 -> a2 >= 2 ) a1) number_true_total
+  let new_world = map2 (\a1 b1 -> map2 (\a2 b2 -> if a2 < 2 then false else (if b2 && ((a2 == 2) || (a2 == 3)) then true else (if !b2 && a2 == 3 then true else (if a2 > 3 then false else false)))) a1 b1) number_true_total[0:width,0:height] world[0:width,0:height]
   in new_world
 
 let starting_world_generator (h: i64) (w: i64): [][]bool =
-  replicate h (replicate w false) with [10,10] = true with [9,10] = true with [10,9] = true with [9,9] = true
+  replicate h (replicate w false) with [9,10] = true with [8,10] = true with [7,10] = true with [9,9] = true with [8,8] = true
 
 type text_content = (i32, i32)
 module lys: lys with text_content = text_content = {

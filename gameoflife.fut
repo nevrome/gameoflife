@@ -7,7 +7,7 @@ let replicate 't (n: i64) (x: t): [n]t =
 let plot (width: i64) (height: i64) (world:[][]bool): [height][width]argb.colour =
   let f j i =
     let is_alive = world[i,j]
-    in if is_alive then argb.green else argb.blue
+    in if is_alive then argb.green else argb.black
   in tabulate_2d height width f
 
 let bti (x: bool): i8 = if x then 1 else 0
@@ -60,7 +60,7 @@ module lys: lys with text_content = text_content = {
   
   type text_content = text_content
   let text_format () = "FPS: %d\nt: %d"
-  let text_colour = const argb.black
+  let text_colour = const argb.white
   let text_content (fps: f32) (s: state): text_content = (t32 fps, t32 s.t)
   let grab_mouse = false
   

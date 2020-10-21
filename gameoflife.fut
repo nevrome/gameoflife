@@ -14,8 +14,8 @@ let gather 'a (xs: [][]a) (is: []i64): [][]a =
   map (\i -> xs[i,:]) is
 
 let conwayslogic (width: i64) (height: i64) (world: [][]bool): [][]bool =
-  let rightworld = concat_to width [world[(width - 1),0:height]] world[1:width,0:height]
-  let new_world = map2 (\a b -> map2 (\c d -> d) a b) world[0:width,0:height] rightworld
+  let rightworld = concat_to width world[1:width,0:height] [world[0,0:height]]
+  let new_world = map2 (\a b -> map2 (\c d -> !d) a b) world[0:width,0:height] rightworld
   in rightworld
 
 let starting_world_generator (h: i64) (w: i64): [][]bool =

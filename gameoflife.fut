@@ -10,8 +10,6 @@ let plot (width: i64) (height: i64) (world:[][]u8): [height][width]argb.colour =
     in if is_alive then argb.green else argb.black
   in tabulate_2d height width f
 
-let bti (x: bool): i8 = if x then 1 else 0
-
 let conways_rules (a: u8) (b: u8): u8 = 
   if a < 2 
   then 0 
@@ -65,7 +63,7 @@ let apply_conways_rules (width: i64) (height: i64) (world: [][]u8): [][]u8 =
   let number_of_true_normal = sum_array_4 shift_left shift_right shift_top shift_bottom
   let number_of_true_diagonal = sum_array_4 shift_top_left shift_top_right shift_bottom_left shift_bottom_right
   let number_true_total = map2 (\a1 b1 -> map2 (\a2 b2 -> (a2 + b2)) a1 b1) number_of_true_normal number_of_true_diagonal
-  -- conway
+  -- finally apply conway rules per cell
   let new_world = map2 (\a1 b1 -> map2 conways_rules a1 b1) number_true_total[0:width,0:height] world[0:width,0:height]
   in new_world
 

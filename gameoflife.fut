@@ -12,7 +12,18 @@ let plot (width: i64) (height: i64) (world:[][]bool): [height][width]argb.colour
 
 let bti (x: bool): i8 = if x then 1 else 0
 
-let conwayslogic (width: i64) (height: i64) (world: [][]bool): [][]bool =
+let conways_rules (a: i8) (b: bool): bool = 
+  if a < 2 
+  then false 
+  else if b && ((a == 2) || (a == 3)) 
+       then true 
+       else if !b && a == 3 
+            then true 
+            else if a > 3 
+                 then false 
+                 else false
+
+let apply_conways_rules (width: i64) (height: i64) (world: [][]bool): [][]bool =
   -- 4x shifts
   let shift_left = concat_to width world[1:width,0:height] [world[0,0:height]]
   let shift_right = concat_to width [world[(width-1),0:height]] world[0:(width-1),0:height]
@@ -31,7 +42,7 @@ let conwayslogic (width: i64) (height: i64) (world: [][]bool): [][]bool =
   let number_of_true_diagonal = map4 (\a1 b1 c1 d1 -> map4 (\a2 b2 c2 d2 -> (bti a2 + bti b2 + bti c2 + bti d2)) a1 b1 c1 d1) shift_top_left shift_top_right shift_bottom_left shift_bottom_right
   let number_true_total = map2 (\a1 b1 -> map2 (\a2 b2 -> (a2 + b2)) a1 b1) number_of_true_normal number_of_true_diagonal
   -- conway
-  let new_world = map2 (\a1 b1 -> map2 (\a2 b2 -> if a2 < 2 then false else (if b2 && ((a2 == 2) || (a2 == 3)) then true else (if !b2 && a2 == 3 then true else (if a2 > 3 then false else false)))) a1 b1) number_true_total[0:width,0:height] world[0:width,0:height]
+  let new_world = map2 (\a1 b1 -> map2 conways_rules a1 b1) number_true_total[0:width,0:height] world[0:width,0:height]
   in new_world
 
 let starting_world_generator (h: i64) (w: i64): [][]bool =
@@ -46,7 +57,7 @@ module lys: lys with text_content = text_content = {
 
   let step (s: state) (td: f32) =
     s with t = s.t + td
-      with world = conwayslogic s.w s.h s.world
+      with world = apply_conways_rules s.w s.h s.world
 
   let event (e: event) (s: state) =
     match e

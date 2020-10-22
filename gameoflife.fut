@@ -23,13 +23,25 @@ let conways_rules (a: i8) (b: bool): bool =
                  then false 
                  else false
 
+let shift_array_left 't (x: i64) (y: i64) (as: [][]t): [][]t =
+  concat_to x as[1:x,0:y] [as[0,0:y]]
+
+let shift_array_right 't (x: i64) (y: i64) (as: [][]t): [][]t =
+  concat_to x [as[(x-1),0:y]] as[0:(x-1),0:y]
+
+let shift_array_top 't (x: i64) (y: i64) (as: [][]t): [][]t =
+  shift_array_left y x (transpose as)
+
+let shift_array_bottom 't (x: i64) (y: i64) (as: [][]t): [][]t =
+  shift_array_right y x (transpose as)
+
 let apply_conways_rules (width: i64) (height: i64) (world: [][]bool): [][]bool =
   -- 4x shifts
-  let shift_left = concat_to width world[1:width,0:height] [world[0,0:height]]
-  let shift_right = concat_to width [world[(width-1),0:height]] world[0:(width-1),0:height]
+  let shift_left = shift_array_left width height world
+  let shift_right = shift_array_right width height world
   let t_world = transpose world
-  let t_shift_top = concat_to height t_world[1:height,0:width] [t_world[0,0:width]]
-  let t_shift_bottom = concat_to height [t_world[(height-1),0:width]] t_world[0:(height-1),0:width]
+  let t_shift_top = shift_array_top width height world
+  let t_shift_bottom = shift_array_bottom width height world
   let shift_top = transpose t_shift_top
   let shift_bottom = transpose t_shift_bottom
   -- 8x shifts 

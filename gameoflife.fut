@@ -30,25 +30,34 @@ let shift_array_right 't (x: i64) (y: i64) (as: [][]t): [][]t =
   concat_to x [as[(x-1),0:y]] as[0:(x-1),0:y]
 
 let shift_array_top 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  shift_array_left y x (transpose as)
+  shift_array_left y x (transpose as) |> transpose
 
 let shift_array_bottom 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  shift_array_right y x (transpose as)
+  shift_array_right y x (transpose as) |> transpose
+
+let shift_array_top_left 't (x: i64) (y: i64) (as: [][]t): [][]t =
+  shift_array_left x y (shift_array_top x y as)
+
+let shift_array_top_right 't (x: i64) (y: i64) (as: [][]t): [][]t =
+  shift_array_right x y (shift_array_top x y as)
+
+let shift_array_bottom_left 't (x: i64) (y: i64) (as: [][]t): [][]t =
+  shift_array_left x y (shift_array_bottom x y as)
+
+let shift_array_bottom_right 't (x: i64) (y: i64) (as: [][]t): [][]t =
+  shift_array_right x y (shift_array_bottom x y as)
 
 let apply_conways_rules (width: i64) (height: i64) (world: [][]bool): [][]bool =
   -- 4x shifts
   let shift_left = shift_array_left width height world
   let shift_right = shift_array_right width height world
-  let t_world = transpose world
-  let t_shift_top = shift_array_top width height world
-  let t_shift_bottom = shift_array_bottom width height world
-  let shift_top = transpose t_shift_top
-  let shift_bottom = transpose t_shift_bottom
+  let shift_top = shift_array_top width height world
+  let shift_bottom = shift_array_bottom width height world
   -- 8x shifts 
-  let shift_top_left = concat_to width shift_top[1:width,0:height] [shift_top[0,0:height]]
-  let shift_top_right = concat_to width [shift_top[(width-1),0:height]] shift_top[0:(width-1),0:height]
-  let shift_bottom_left = concat_to width shift_bottom[1:width,0:height] [shift_bottom[0,0:height]]
-  let shift_bottom_right = concat_to width [shift_bottom[(width-1),0:height]] shift_bottom[0:(width-1),0:height]
+  let shift_top_left = shift_array_top_left width height world
+  let shift_top_right = shift_array_top_right width height world
+  let shift_bottom_left = shift_array_bottom_left width height world
+  let shift_bottom_right = shift_array_bottom_right width height world
   -- calculate sums per cell
   let number_of_true_normal = map4 (\a1 b1 c1 d1 -> map4 (\a2 b2 c2 d2 -> (bti a2 + bti b2 + bti c2 + bti d2)) a1 b1 c1 d1) shift_left shift_right shift_top shift_bottom
   let number_of_true_diagonal = map4 (\a1 b1 c1 d1 -> map4 (\a2 b2 c2 d2 -> (bti a2 + bti b2 + bti c2 + bti d2)) a1 b1 c1 d1) shift_top_left shift_top_right shift_bottom_left shift_bottom_right

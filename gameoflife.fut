@@ -92,8 +92,7 @@ module lys: lys with text_content = text_content = {
     case #step td -> step s td
     case _ -> s
 
-  -- see https://github.com/athas/abelian-sandpile/blob/master/sandpile.fut for a solution for the resizing problem
-  let resize h w (s: state) = s with h = h with w = w
+  let resize h w (s: state) = s with h = h with w = w with world = starting_world_generator w h
 
   let render (s: state) = plot s.w s.h s.world
   

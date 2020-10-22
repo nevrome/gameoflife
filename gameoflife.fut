@@ -76,12 +76,31 @@ let apply_conways_rules (width: i64) (height: i64) (world: [][]bool): [][]bool =
 let starting_world_generator (h: i64) (w: i64): [][]bool =
   replicate h (replicate w false) with [9,10] = true with [8,10] = true with [7,10] = true with [9,9] = true with [8,8] = true
 
+let awake_world (x: i64) (y: i64) (world: [][]bool): [][]bool =
+  -- let new_world = world with [x,y] = true
+  -- in new_world
+  world
+
 type text_content = (i32, i32)
 module lys: lys with text_content = text_content = {
 
-  type~ state = {t:f32, h:i64, w:i64, paused:bool, world:[][]bool}
+  type~ state = {
+    t:f32, 
+    h:i64, 
+    w:i64, 
+    paused:bool,
+    mouse: (i64, i64),
+    world:[][]bool
+  }
 
-  let init _ h w: state = {t=0, h, w, paused = false, world = starting_world_generator w h}
+  let init _ h w: state = {
+    t=0, 
+    h,
+    w,
+    paused = false,
+    mouse = (0,0),
+    world = starting_world_generator w h
+  }
 
   let step (s: state) (td: f32) =
     if s.paused 
@@ -97,6 +116,7 @@ module lys: lys with text_content = text_content = {
     match e
     case #step td -> step s td
     case #keydown {key} -> keydown key s
+    case #mouse {buttons, x, y} -> s with mouse = (i64.i32 y, i64.i32 x)
     case _ -> s
 
   let resize h w (s: state) = s with h = h with w = w with world = starting_world_generator w h

@@ -79,17 +79,24 @@ let starting_world_generator (h: i64) (w: i64): [][]bool =
 type text_content = (i32, i32)
 module lys: lys with text_content = text_content = {
 
-  type~ state = {t:f32, h:i64, w:i64, world:[][]bool}
+  type~ state = {t:f32, h:i64, w:i64, paused:bool, world:[][]bool}
 
-  let init _ h w: state = {t=0, h, w, world = starting_world_generator w h}
+  let init _ h w: state = {t=0, h, w, paused = false, world = starting_world_generator w h}
 
   let step (s: state) (td: f32) =
-    s with t = s.t + td
-      with world = apply_conways_rules s.w s.h s.world
+    if s.paused 
+    then s
+    else s with t = s.t + td
+           with world = apply_conways_rules s.w s.h s.world
+      
+  let keydown (key: i32) (s: state) =
+    if key == SDLK_SPACE then s with paused = !s.paused
+    else s
 
   let event (e: event) (s: state) =
     match e
     case #step td -> step s td
+    case #keydown {key} -> keydown key s
     case _ -> s
 
   let resize h w (s: state) = s with h = h with w = w with world = starting_world_generator w h

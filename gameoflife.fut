@@ -53,8 +53,15 @@ let bool2u8 (x: bool): u8 = if x then 1 else 0
 let bool2u8_array (as: [][]bool): [][]u8 =
   map (\a1 -> map (\a2 -> bool2u8 a2) a1) as
 
-let apply_conways_rules (width: i64) (height: i64) (world: [][]bool): [][]bool =
-  let world_u8 = bool2u8_array world
+let awake_world (x: i64) (y: i64) (world: [][]bool): [][]bool =
+  let new_world = world with [x,y] = true
+  in new_world
+
+let apply_conways_rules (width: i64) (height: i64) (mouse: (i64, i64)) (world: [][]bool): [][]bool =
+  -- apply mouse input
+  let edited_world = awake_world mouse.0 mouse.1 world
+  -- create u8 world for summing
+  let world_u8 = bool2u8_array edited_world
   -- 4 degrees of freedom shifts
   let shift_left = shift_array_left width height world_u8
   let shift_right = shift_array_right width height world_u8
@@ -70,16 +77,11 @@ let apply_conways_rules (width: i64) (height: i64) (world: [][]bool): [][]bool =
   let number_of_true_diagonal = sum_array_4 shift_top_left shift_top_right shift_bottom_left shift_bottom_right
   let number_true_total = map2 (\a1 b1 -> map2 (\a2 b2 -> (a2 + b2)) a1 b1) number_of_true_normal number_of_true_diagonal
   -- finally apply conway rules per cell
-  let new_world = map2 (\a1 b1 -> map2 conways_rules a1 b1) number_true_total[0:width,0:height] world[0:width,0:height]
+  let new_world = map2 (\a1 b1 -> map2 conways_rules a1 b1) number_true_total[0:width,0:height] edited_world[0:width,0:height]
   in new_world
 
 let starting_world_generator (h: i64) (w: i64): [][]bool =
   replicate h (replicate w false) with [9,10] = true with [8,10] = true with [7,10] = true with [9,9] = true with [8,8] = true
-
-let awake_world (x: i64) (y: i64) (world: [][]bool): [][]bool =
-  -- let new_world = world with [x,y] = true
-  -- in new_world
-  world
 
 type text_content = (i32, i32)
 module lys: lys with text_content = text_content = {
@@ -106,7 +108,7 @@ module lys: lys with text_content = text_content = {
     if s.paused 
     then s
     else s with t = s.t + td
-           with world = apply_conways_rules s.w s.h s.world
+           with world = apply_conways_rules s.w s.h s.mouse s.world
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused

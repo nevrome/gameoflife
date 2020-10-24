@@ -56,10 +56,13 @@ let bool2u8_array (as: [][]bool): [][]u8 =
 let mouse_world_generator (h: i64) (w: i64) (x: i64) (y: i64): [][]bool =
   replicate h (replicate w false) with [y,x] = true with [y+1,x+1] = true with [y+1,x] = true with [y,x+1] = true
 
-let apply_conways_rules (width: i64) (height: i64) (mouse: (i64, i64)) (world: [][]bool): [][]bool =
+let apply_conways_rules (width: i64) (height: i64) (mouse_activated: bool) (mouse: (i64, i64)) (world: [][]bool): [][]bool =
   -- apply mouse input
   let mouse_world = mouse_world_generator width height mouse.0 mouse.1
-  let edited_world = map2 (\a1 b1 -> map2 (\a2 b2 -> a2 || b2) a1 b1) mouse_world[0:width,0:height] world[0:width,0:height]
+  let edited_world = 
+    if mouse_activated 
+    then map2 (\a1 b1 -> map2 (\a2 b2 -> a2 || b2) a1 b1) mouse_world[0:width,0:height] world[0:width,0:height]
+    else world
   -- create u8 world for summing
   let world_u8 = bool2u8_array edited_world
   -- 4 degrees of freedom shifts
@@ -153,6 +156,7 @@ module lys: lys with text_content = text_content = zoom_wrapper {
     h:i64, 
     w:i64, 
     paused:bool,
+    mouse_activated:bool,
     mouse: (i64, i64),
     world:[][]bool,
     numer_of_steps:i64,
@@ -164,7 +168,8 @@ module lys: lys with text_content = text_content = zoom_wrapper {
     h,
     w,
     paused = false,
-    mouse = (100,50),
+    mouse_activated = false,
+    mouse = (0,0),
     world = starting_world_generator w h,
     numer_of_steps=0,
     speed=5
@@ -173,7 +178,7 @@ module lys: lys with text_content = text_content = zoom_wrapper {
   let step (s: state) =
     s with t = s.t + 1
       with numer_of_steps = s.numer_of_steps + 1
-      with world = apply_conways_rules s.w s.h s.mouse s.world
+      with world = apply_conways_rules s.w s.h s.mouse_activated s.mouse s.world
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused
@@ -199,9 +204,10 @@ module lys: lys with text_content = text_content = zoom_wrapper {
            else s with t = s.t + 1
     case #keydown {key} -> keydown key s
     case #mouse {buttons, x, y} -> 
-      s with mouse = if (buttons != 0) && (i64.i32 y < s.h) && (i64.i32 x < s.w)
-                     then (i64.i32 y, i64.i32 x)
-                     else s.mouse
+      if (buttons != 0) && (i64.i32 y < s.h) && (i64.i32 x < s.w)
+      then s with mouse_activated = true
+             with mouse =(i64.i32 y, i64.i32 x)
+      else s with mouse_activated = false
     case _ -> s
 
   let resize h w (s: state) = s with h = h with w = w with world = starting_world_generator w h

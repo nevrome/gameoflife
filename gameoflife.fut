@@ -1,25 +1,23 @@
 import "lib/github.com/athas/matte/colour"
 import "lib/github.com/diku-dk/lys/lys"
 
+-- #### general helper functions ####
+
 let replicate 't (n: i64) (x: t): [n]t =
   map (\_ -> x) (0..<n)
 
-let plot (width: i64) (height: i64) (world:[][]bool): [height][width]argb.colour =
-  let f j i =
-    let is_alive = world[i,j]
-    in if is_alive then argb.green else argb.black
-  in tabulate_2d height width f
+let bool2u8 (x: bool): u8 = if x then 1 else 0
 
-let conways_rules (a: u8) (b: bool): bool = 
-  if a < 2 
-  then false 
-  else if b && ((a == 2) || (a == 3)) 
-       then true 
-       else if !b && a == 3 
-            then true 
-            else if a > 3 
-                 then false 
-                 else false
+let bool2u8_array (as: [][]bool): [][]u8 =
+  map (\a1 -> map (\a2 -> bool2u8 a2) a1) as
+
+-- #### world array operations ####
+
+let starting_world_generator (h: i64) (w: i64): [][]bool =
+  replicate h (replicate w false) with [9,10] = true with [8,10] = true with [7,10] = true with [9,9] = true with [8,8] = true
+
+let mouse_world_generator (h: i64) (w: i64) (x: i64) (y: i64): [][]bool =
+  replicate h (replicate w false) with [y,x] = true with [y+1,x+1] = true with [y+1,x] = true with [y,x+1] = true
 
 let shift_array_left 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
   concat_to x as[d:x,0:y] as[0:d,0:y]
@@ -48,15 +46,20 @@ let shift_array_bottom_right 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
 let sum_array_4 (as: [][]u8) (bs: [][]u8) (cs: [][]u8) (ds: [][]u8): [][]u8 =
   map4 (\a1 b1 c1 d1 -> map4 (\a2 b2 c2 d2 -> (a2 + b2 + c2 + d2)) a1 b1 c1 d1) as bs cs ds
 
-let bool2u8 (x: bool): u8 = if x then 1 else 0
+-- #### game logic ####
 
-let bool2u8_array (as: [][]bool): [][]u8 =
-  map (\a1 -> map (\a2 -> bool2u8 a2) a1) as
+let conways_rules (a: u8) (b: bool): bool = 
+  if a < 2 
+  then false 
+  else if b && ((a == 2) || (a == 3)) 
+       then true 
+       else if !b && a == 3 
+            then true 
+            else if a > 3 
+                 then false 
+                 else false
 
-let mouse_world_generator (h: i64) (w: i64) (x: i64) (y: i64): [][]bool =
-  replicate h (replicate w false) with [y,x] = true with [y+1,x+1] = true with [y+1,x] = true with [y,x+1] = true
-
-let apply_conways_rules (width: i64) (height: i64) (mouse_activated: bool) (mouse: (i64, i64)) (world: [][]bool): [][]bool =
+let change_world (width: i64) (height: i64) (mouse_activated: bool) (mouse: (i64, i64)) (world: [][]bool): [][]bool =
   -- apply mouse input
   let mouse_world = mouse_world_generator width height mouse.0 mouse.1
   let edited_world = 
@@ -83,8 +86,7 @@ let apply_conways_rules (width: i64) (height: i64) (mouse_activated: bool) (mous
   let new_world = map2 (\a1 b1 -> map2 conways_rules a1 b1) number_true_total[0:width,0:height] edited_world[0:width,0:height]
   in new_world
 
-let starting_world_generator (h: i64) (w: i64): [][]bool =
-  replicate h (replicate w false) with [9,10] = true with [8,10] = true with [7,10] = true with [9,9] = true with [8,8] = true
+-- #### user interface with lys ####
 
 let screen_point_to_world_point ((centre_x, centre_y): (f32,f32)) (s: f32)
                                 ((sw,sh): (i64,i64)) ((ww,wh): (i64,i64))
@@ -148,6 +150,12 @@ module zoom_wrapper (M: lys) : lys with text_content = M.text_content = {
   let text_colour (s: state) = M.text_colour s.inner
 }
 
+let plot (width: i64) (height: i64) (world:[][]bool): [height][width]argb.colour =
+  let f j i =
+    let is_alive = world[i,j]
+    in if is_alive then argb.green else argb.black
+  in tabulate_2d height width f
+
 type text_content = (i32, i32, i32)
 module lys: lys with text_content = text_content = zoom_wrapper {
 
@@ -178,7 +186,7 @@ module lys: lys with text_content = text_content = zoom_wrapper {
   let step (s: state) =
     s with t = s.t + 1
       with numer_of_steps = s.numer_of_steps + 1
-      with world = apply_conways_rules s.w s.h s.mouse_activated s.mouse s.world
+      with world = change_world s.w s.h s.mouse_activated s.mouse s.world
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused

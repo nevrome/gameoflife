@@ -21,29 +21,29 @@ let conways_rules (a: u8) (b: bool): bool =
                  then false 
                  else false
 
-let shift_array_left 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  concat_to x as[1:x,0:y] [as[0,0:y]]
+let shift_array_left 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
+  concat_to x as[d:x,0:y] as[0:d,0:y]
 
-let shift_array_right 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  concat_to x [as[(x-1),0:y]] as[0:(x-1),0:y]
+let shift_array_right 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
+  concat_to x as[(x-d):x,0:y] as[0:(x-d),0:y]
 
-let shift_array_top 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  shift_array_left y x (transpose as) |> transpose
+let shift_array_top 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
+  shift_array_left y x (transpose as) d |> transpose
 
-let shift_array_bottom 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  shift_array_right y x (transpose as) |> transpose
+let shift_array_bottom 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
+  shift_array_right y x (transpose as) d |> transpose
 
-let shift_array_top_left 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  shift_array_left x y (shift_array_top x y as)
+let shift_array_top_left 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
+  shift_array_left x y (shift_array_top x y as d) d
 
-let shift_array_top_right 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  shift_array_right x y (shift_array_top x y as)
+let shift_array_top_right 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
+  shift_array_right x y (shift_array_top x y as d) d
 
-let shift_array_bottom_left 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  shift_array_left x y (shift_array_bottom x y as)
+let shift_array_bottom_left 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
+  shift_array_left x y (shift_array_bottom x y as d) d
 
-let shift_array_bottom_right 't (x: i64) (y: i64) (as: [][]t): [][]t =
-  shift_array_right x y (shift_array_bottom x y as)
+let shift_array_bottom_right 't (x: i64) (y: i64) (as: [][]t) (d: i64): [][]t =
+  shift_array_right x y (shift_array_bottom x y as d) d
 
 let sum_array_4 (as: [][]u8) (bs: [][]u8) (cs: [][]u8) (ds: [][]u8): [][]u8 =
   map4 (\a1 b1 c1 d1 -> map4 (\a2 b2 c2 d2 -> (a2 + b2 + c2 + d2)) a1 b1 c1 d1) as bs cs ds
@@ -66,15 +66,15 @@ let apply_conways_rules (width: i64) (height: i64) (mouse_activated: bool) (mous
   -- create u8 world for summing
   let world_u8 = bool2u8_array edited_world
   -- 4 degrees of freedom shifts
-  let shift_left = shift_array_left width height world_u8
-  let shift_right = shift_array_right width height world_u8
-  let shift_top = shift_array_top width height world_u8
-  let shift_bottom = shift_array_bottom width height world_u8
+  let shift_left = shift_array_left width height world_u8 1
+  let shift_right = shift_array_right width height world_u8 1
+  let shift_top = shift_array_top width height world_u8 1
+  let shift_bottom = shift_array_bottom width height world_u8 1
   -- 8 degrees of freedom shifts 
-  let shift_top_left = shift_array_top_left width height world_u8
-  let shift_top_right = shift_array_top_right width height world_u8
-  let shift_bottom_left = shift_array_bottom_left width height world_u8
-  let shift_bottom_right = shift_array_bottom_right width height world_u8
+  let shift_top_left = shift_array_top_left width height world_u8 1
+  let shift_top_right = shift_array_top_right width height world_u8 1
+  let shift_bottom_left = shift_array_bottom_left width height world_u8 1
+  let shift_bottom_right = shift_array_bottom_right width height world_u8 1
   -- calculate sums per cell
   let number_of_true_normal = sum_array_4 shift_left shift_right shift_top shift_bottom
   let number_of_true_diagonal = sum_array_4 shift_top_left shift_top_right shift_bottom_left shift_bottom_right
@@ -182,10 +182,10 @@ module lys: lys with text_content = text_content = zoom_wrapper {
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused
-    else if key == SDLK_LEFT then s with world = shift_array_right s.w s.h s.world
-    else if key == SDLK_RIGHT then s with world = shift_array_left s.w s.h s.world
-    else if key == SDLK_UP then s with world = shift_array_bottom s.w s.h s.world
-    else if key == SDLK_DOWN then s with world = shift_array_top s.w s.h s.world
+    else if key == SDLK_LEFT then s with world = shift_array_right s.w s.h s.world 10
+    else if key == SDLK_RIGHT then s with world = shift_array_left s.w s.h s.world 10
+    else if key == SDLK_UP then s with world = shift_array_bottom s.w s.h s.world 10
+    else if key == SDLK_DOWN then s with world = shift_array_top s.w s.h s.world 10
     else if key == SDLK_PLUS then if s.speed == 10 
                                   then s with speed = 1
                                   else s with speed = s.speed + 1

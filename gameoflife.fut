@@ -156,7 +156,7 @@ module zoom_wrapper (M: lys) : lys with text_content = M.text_content = {
   let text_colour (s: state) = M.text_colour s.inner
 }
 
-type text_content = (i32, i32)
+type text_content = (i32, i32, i32)
 module lys: lys with text_content = text_content = zoom_wrapper {
 
   type~ state = {
@@ -178,7 +178,7 @@ module lys: lys with text_content = text_content = zoom_wrapper {
     mouse = (100,50),
     world = starting_world_generator w h,
     numer_of_steps=0,
-    speed=80
+    speed=40
   }
 
   let step (s: state) =
@@ -188,14 +188,18 @@ module lys: lys with text_content = text_content = zoom_wrapper {
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused
+    else if key == SDLK_PLUS then if s.speed == 49 then s with speed = 0
+                                  else s with speed = s.speed + 1
+    else if key == SDLK_MINUS then if s.speed == 0 then s with speed = 49
+                                   else s with speed = s.speed - 1                              
     else s
 
   let event (e: event) (s: state) =
     match e
-    case #step td -> 
+    case #step -> -- case #step td -> 
       if s.paused
       then s
-      else if s.t %% (100 - s.speed) == 0
+      else if s.t %% (50 - s.speed) == 0
            then step s
            else s with t = s.t + 1
     case #keydown {key} -> keydown key s
@@ -210,9 +214,13 @@ module lys: lys with text_content = text_content = zoom_wrapper {
   let render (s: state) = plot s.w s.h s.world
   
   type text_content = text_content
-  let text_format () = "FPS: %d\nt: %d"
+  let text_format () = "FPS: %d\nt: %d\nspeed: %d"
   let text_colour = const argb.white
-  let text_content (fps: f32) (s: state): text_content = (t32 fps, i32.i64 s.numer_of_steps)
+  let text_content (fps: f32) (s: state): text_content = (
+    t32 fps, 
+    i32.i64 s.numer_of_steps, 
+    s.speed
+  )
   let grab_mouse = false
   
 }

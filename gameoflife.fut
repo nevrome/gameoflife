@@ -114,21 +114,10 @@ module zoom_wrapper (M: lys) : lys with text_content = M.text_content = {
                               , height = h }
 
   let zoom dy (s : state) =
-    s with scale = f32.min 1 (s.scale * (0.99**r32 dy))
+    s with scale = f32.min 1 (s.scale * (0.99**(f32.i32 dy * 10)))
 
-  let move (dx, dy) (s: state) =
-    s with centre = (s.centre.0 + dx * 0.1 * s.scale,
-                     s.centre.1 + dy * 0.1 * s.scale)
-
-  let event (e: event) s =
+  let event (e: event) (s: state) =
     match e
-    case #keydown {key} ->
-      let s' = if      key == SDLK_LEFT then move (-1, 0) s
-               else if key == SDLK_RIGHT then move (1, 0) s
-               else if key == SDLK_UP then move (0, -1) s
-               else if key == SDLK_DOWN then move (0, 1) s
-               else s
-      in s with inner = M.event e s'.inner
     case #mouse {buttons, x, y} ->
       let (x, y) = screen_point_to_world_point s.centre s.scale
                    (s.width, s.height) (s.width, s.height) (x,y)

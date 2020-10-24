@@ -177,6 +177,10 @@ module lys: lys with text_content = text_content = zoom_wrapper {
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused
+    else if key == SDLK_LEFT then s with world = shift_array_right s.w s.h s.world
+    else if key == SDLK_RIGHT then s with world = shift_array_left s.w s.h s.world
+    else if key == SDLK_UP then s with world = shift_array_bottom s.w s.h s.world
+    else if key == SDLK_DOWN then s with world = shift_array_top s.w s.h s.world
     else if key == SDLK_PLUS then if s.speed == 10 
                                   then s with speed = 1
                                   else s with speed = s.speed + 1

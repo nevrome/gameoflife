@@ -180,8 +180,10 @@ module lys: lys with text_content = text_content = zoom_wrapper {
   let step (s: state) (td: f32) =
     if s.paused 
     then s
-    else s with t = s.t + td
-           with world = apply_conways_rules s.w s.h s.mouse s.world
+    else if (i32.f32 (td * 1000)) %% 10 == 0
+         then s with t = s.t + td
+                with world = apply_conways_rules s.w s.h s.mouse s.world
+         else s
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused

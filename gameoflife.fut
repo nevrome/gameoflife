@@ -92,8 +92,8 @@ let change_world (width: i64) (height: i64) (mouse_activated: bool) (mouse: (i64
 let screen_point_to_world_point ((centre_x, centre_y): (f32,f32)) (s: f32)
                                 ((sw,sh): (i64,i64)) ((ww,wh): (i64,i64))
                                 ((x,y): (i32,i32)) =
-  let x' = t32 ((centre_x + s * (r32 (x-(i32.i64 ww)/2) / f32.i64 sw)) * f32.i64 ww)
-  let y' = t32 ((centre_y + s * (r32 (y-(i32.i64 wh)/2) / f32.i64 sh)) * f32.i64 wh)
+  let x' = i32.f32 ((centre_x + s * (f32.i32 (x-(i32.i64 ww)/2) / f32.i64 sw)) * f32.i64 ww)
+  let y' = i32.f32 ((centre_y + s * (f32.i32 (y-(i32.i64 wh)/2) / f32.i64 sh)) * f32.i64 wh)
   in (x', y')
 
 let screen_point_to_world_point_64 ((centre_x, centre_y): (f32,f32)) (s: f32)

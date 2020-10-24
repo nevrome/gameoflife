@@ -160,12 +160,14 @@ type text_content = (i32, i32)
 module lys: lys with text_content = text_content = zoom_wrapper {
 
   type~ state = {
-    t:f32, 
+    t:i32,
     h:i64, 
     w:i64, 
     paused:bool,
     mouse: (i64, i64),
-    world:[][]bool
+    world:[][]bool,
+    numer_of_steps:i64,
+    speed:i32
   }
 
   let init _ h w: state = {
@@ -174,16 +176,15 @@ module lys: lys with text_content = text_content = zoom_wrapper {
     w,
     paused = false,
     mouse = (100,50),
-    world = starting_world_generator w h
+    world = starting_world_generator w h,
+    numer_of_steps=0,
+    speed=80
   }
 
-  let step (s: state) (td: f32) =
-    if s.paused 
-    then s
-    else if (i32.f32 (td * 1000)) %% 10 == 0
-         then s with t = s.t + td
-                with world = apply_conways_rules s.w s.h s.mouse s.world
-         else s
+  let step (s: state) =
+    s with t = s.t + 1
+      with numer_of_steps = s.numer_of_steps + 1
+      with world = apply_conways_rules s.w s.h s.mouse s.world
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused
@@ -191,7 +192,12 @@ module lys: lys with text_content = text_content = zoom_wrapper {
 
   let event (e: event) (s: state) =
     match e
-    case #step td -> step s td
+    case #step td -> 
+      if s.paused
+      then s
+      else if s.t %% (100 - s.speed) == 0
+           then step s
+           else s with t = s.t + 1
     case #keydown {key} -> keydown key s
     case #mouse {buttons, x, y} -> 
       s with mouse = if (buttons != 0) && (i64.i32 y < s.h) && (i64.i32 x < s.w)
@@ -206,7 +212,7 @@ module lys: lys with text_content = text_content = zoom_wrapper {
   type text_content = text_content
   let text_format () = "FPS: %d\nt: %d"
   let text_colour = const argb.white
-  let text_content (fps: f32) (s: state): text_content = (t32 fps, t32 s.t)
+  let text_content (fps: f32) (s: state): text_content = (t32 fps, i32.i64 s.numer_of_steps)
   let grab_mouse = false
   
 }

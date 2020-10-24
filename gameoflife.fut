@@ -83,8 +83,81 @@ let apply_conways_rules (width: i64) (height: i64) (mouse: (i64, i64)) (world: [
 let starting_world_generator (h: i64) (w: i64): [][]bool =
   replicate h (replicate w false) with [9,10] = true with [8,10] = true with [7,10] = true with [9,9] = true with [8,8] = true
 
+let screen_point_to_world_point ((centre_x, centre_y): (f32,f32)) (s: f32)
+                                ((sw,sh): (i64,i64)) ((ww,wh): (i64,i64))
+                                ((x,y): (i32,i32)) =
+  let x' = t32 ((centre_x + s * (r32 (x-(i32.i64 ww)/2) / f32.i64 sw)) * f32.i64 ww)
+  let y' = t32 ((centre_y + s * (r32 (y-(i32.i64 wh)/2) / f32.i64 sh)) * f32.i64 wh)
+  in (x', y')
+
+let screen_point_to_world_point_64 ((centre_x, centre_y): (f32,f32)) (s: f32)
+                                ((sw,sh): (i64,i64)) ((ww,wh): (i64,i64))
+                                ((x,y): (i64,i64)) =
+  let x' = i64.f32 ((centre_x + s * (f32.i64 (x-ww/2) / f32.i64 sw)) * f32.i64 ww)
+  let y' = i64.f32 ((centre_y + s * (f32.i64 (y-wh/2) / f32.i64 sh)) * f32.i64 wh)
+  in (x', y')
+
+module zoom_wrapper (M: lys) : lys with text_content = M.text_content = {
+  type~ state = { inner: M.state
+                , centre: (f32, f32)
+                , scale: f32
+                , width: i64
+                , height: i64
+                }
+
+  type text_content = M.text_content
+
+  let init seed h w : state = { inner = M.init seed h w
+                              , centre = (0.5, 0.5)
+                              , scale = 1
+                              , width = w
+                              , height = h }
+
+  let zoom dy (s : state) =
+    s with scale = f32.min 1 (s.scale * (0.99**r32 dy))
+
+  let move (dx, dy) (s: state) =
+    s with centre = (s.centre.0 + dx * 0.1 * s.scale,
+                     s.centre.1 + dy * 0.1 * s.scale)
+
+  let event (e: event) s =
+    match e
+    case #keydown {key} ->
+      let s' = if      key == SDLK_LEFT then move (-1, 0) s
+               else if key == SDLK_RIGHT then move (1, 0) s
+               else if key == SDLK_UP then move (0, -1) s
+               else if key == SDLK_DOWN then move (0, 1) s
+               else s
+      in s with inner = M.event e s'.inner
+    case #mouse {buttons, x, y} ->
+      let (x, y) = screen_point_to_world_point s.centre s.scale
+                   (s.width, s.height) (s.width, s.height) (x,y)
+      in s with inner = M.event (#mouse {buttons, x, y}) s.inner
+    case #wheel {dx=_, dy} ->
+      zoom dy s with inner = M.event e s.inner
+    case e ->
+      s with inner = M.event e s.inner
+
+  let resize h w (s: state) = s with inner = M.resize h w s.inner
+                                with width = w
+                                with height = h
+
+  let render (s: state) =
+    let screen = M.render s.inner
+    let pixel y x =
+      let (x',y') = screen_point_to_world_point_64 s.centre s.scale
+                    (s.width, s.height) (s.width, s.height) (x,y)
+      in screen[y', x']
+    in tabulate_2d s.height s.width pixel
+
+  let grab_mouse = M.grab_mouse
+  let text_format = M.text_format
+  let text_content fps (s: state) = M.text_content fps s.inner
+  let text_colour (s: state) = M.text_colour s.inner
+}
+
 type text_content = (i32, i32)
-module lys: lys with text_content = text_content = {
+module lys: lys with text_content = text_content = zoom_wrapper {
 
   type~ state = {
     t:f32, 

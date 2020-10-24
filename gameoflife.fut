@@ -178,7 +178,7 @@ module lys: lys with text_content = text_content = zoom_wrapper {
     mouse = (100,50),
     world = starting_world_generator w h,
     numer_of_steps=0,
-    speed=40
+    speed=5
   }
 
   let step (s: state) =
@@ -188,9 +188,11 @@ module lys: lys with text_content = text_content = zoom_wrapper {
       
   let keydown (key: i32) (s: state) =
     if key == SDLK_SPACE then s with paused = !s.paused
-    else if key == SDLK_PLUS then if s.speed == 49 then s with speed = 0
+    else if key == SDLK_PLUS then if s.speed == 10 
+                                  then s with speed = 1
                                   else s with speed = s.speed + 1
-    else if key == SDLK_MINUS then if s.speed == 0 then s with speed = 49
+    else if key == SDLK_MINUS then if s.speed == 1 
+                                   then s with speed = 10
                                    else s with speed = s.speed - 1                              
     else s
 
@@ -199,7 +201,7 @@ module lys: lys with text_content = text_content = zoom_wrapper {
     case #step -> -- case #step td -> 
       if s.paused
       then s
-      else if s.t %% (50 - s.speed) == 0
+      else if s.t %% (11 - s.speed) == 0
            then step s
            else s with t = s.t + 1
     case #keydown {key} -> keydown key s

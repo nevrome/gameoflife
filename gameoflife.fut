@@ -87,6 +87,7 @@ let change_world (width: i64) (height: i64) (mouse_activated: bool) (mouse: (i64
   in new_world
 
 -- #### user interface with lys ####
+-- most of this code is adapted from https://github.com/diku-dk/lys and https://github.com/athas/abelian-sandpile
 
 let screen_point_to_world_point ((centre_x, centre_y): (f32,f32)) (s: f32)
                                 ((sw,sh): (i64,i64)) ((ww,wh): (i64,i64))
